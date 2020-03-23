@@ -79,9 +79,15 @@ else
         obj.endframe = obj.numframes;
     end
     
+    % JW - added if statement for movies with alternating channels.
     for ichannel=1:obj.numchannels
-        
-        chooseind=mod(floor((0:length(mov)-1)/obj.numstacks),obj.numchannels)==ichannel-1;
+        if contains(data{1}(1,2),'Z=1') && contains(data{1}(2,2),'Z=1')
+            chooseind = ceil(mod((0:length(mov)-1)/obj.numchannels,1)) ...
+                == ichannel-1;
+        else
+            chooseind=mod(floor((0:length(mov)-1)/obj.numstacks),...
+                obj.numchannels)==ichannel-1;
+        end       
         channelmov = mov(chooseind);
         obj.channels(ichannel).load(channelmov(...
             (obj.startframe-1)*obj.numstacks+1:obj.endframe*obj.numstacks),obj);

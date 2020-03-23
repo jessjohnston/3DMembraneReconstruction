@@ -10,10 +10,16 @@ classdef MeshBuilder3DSphere < CellVision3D.MeshBuilder3D
         padsame = false;% pad the out of boundary z slice with same image as the boundary image, otherwise will pad with zeros
     end
     
-    properties (SetAccess = public, Hidden=true)
-        rmin=3; % min radius of mesh
-        rmax=15; % max radius of mesh
-        rstep=.3; % interpolation stepping of radius
+%     properties (SetAccess = public, Hidden=true) % JW
+%         rmin=3; % min radius of mesh
+%         rmax=15; % max radius of mesh
+%         rstep=.3; % interpolation stepping of radius
+%     end
+
+    properties (SetAccess = public) % JW
+        rmin % min radius of mesh
+        rmax % max radius of mesh
+        rstep % interpolation stepping of radius
     end
     
     methods

@@ -16,7 +16,7 @@ classdef Image < CellVision3D.HObject
     
     methods (Static)
         [ wimg ] = crop( img,roi ); % crop
-        [ th ] = getPercentageValue( img, percent );
+        [ th,bins,counts,threshind ] = getPercentageValue( img, percent );
         [ cnt2,index] = removeNearBorder( cnt,img,half_win )
     end
 end

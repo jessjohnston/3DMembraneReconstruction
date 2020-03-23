@@ -56,13 +56,15 @@ if ~isempty(input) %% if input is not empty
                 % get the radius of the cell
                 pts = contours(icell).tmpvertices;
                 r= mean(sqrt(sum((pts-ones(size(pts,1),1)*mean(pts,1)).^2,2)));
-                factor = max(round(r/10/ii),1);
+%                 factor = max(round(r/10/ii),1); % JW
+                factor = max(round(r/20/ii),1); % JW
                 % fit
                 initialpos=contours(icell).tmpvertices;
                 if length(varargin)>1
                     [outputpos] = obj.fitMesh(...
                         image3,initialpos,vertices,faces,edges,neighbors,...
-                        'showplot',1,'Parent',varargin{2},'scale',factor);
+                        'showplot',1,'Parent',varargin{2},'scale',factor,...
+                        varargin{3},varargin{4},varargin{5});
                 else
                     [outputpos] = obj.fitMesh(...
                         image3,initialpos,vertices,faces,edges,neighbors,...
@@ -96,13 +98,23 @@ if ~isempty(input) %% if input is not empty
                 % fit
                 initialpos=contours(icell).tmpvertices;
                 if length(varargin)>1
-                    [outputpos] = obj.fitMesh(image3,initialpos,vertices,faces,edges,neighbors,...
-                        'showplot',1,'Parent',varargin{2});
+                    [outputpos] = obj.fitMesh(image3,initialpos,...
+                        vertices,faces,edges,neighbors,'showplot',1,...
+                        'Parent',varargin{2},varargin{3},varargin{4},...
+                            varargin{5});
                 else
                     [outputpos] = obj.fitMesh(image3,initialpos,vertices,faces,edges,neighbors);
                 end
                 % save result
                 contours(icell).addFrame(iframe,outputpos,faces);
+                % save reconstruction image, slices, etc. as .png - JW
+                % batch processing
+%                 saveas(gcf,fullfile('./',varargin{3},...
+%                     sprintf('%s_membrane_reconstruct_cell_%d',...
+%                     varargin{4},icell)),'png');
+                % single processing
+                saveas(gcf,fullfile('./',...
+                    sprintf('membrane_reconstruct_cell_%d',icell)),'png');
                 % call back function
                 if nargin>2
                     if ~isempty(varargin{1})

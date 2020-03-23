@@ -1,4 +1,5 @@
-function [outputpos] = fitMesh(obj,image3,initialpos,vertices,faces,edges,neighbors,varargin)
+function [outputpos] = fitMesh(obj,image3,initialpos,vertices,faces,...
+edges,neighbors,varargin)
 % fit the mesh with the image
 % input: image3 - image stack
 %        initialpos - initial vertices positions
@@ -68,7 +69,8 @@ linearindex=nan(length(initialpos),length(rs),4);
 weights=zeros(length(initialpos),length(rs),4);
 
 %points to be interpolated, coordinates in subwindow
-xybordersize=3;
+% xybordersize=3; % JW
+xybordersize = round(0.04*size(image3,1)); % Increased bordersize to show all of nucleus in cropped image.
 xs=vertices(:,1)*rs+obj.rmax+1+xybordersize+dcnt(1);
 ys=vertices(:,2)*rs+obj.rmax+1+xybordersize+dcnt(2);
 zs=vertices(:,3)*rs/obj.zxr+cnt(3);
@@ -78,6 +80,12 @@ img=CellVision3D.Image3D.crop(image3,...
     round([ncnt(2)-obj.rmax-xybordersize,ncnt(2)+obj.rmax+xybordersize,...
     ncnt(1)-obj.rmax-xybordersize,ncnt(1)+obj.rmax+xybordersize,...
     1,size(image3,3)]));
+
+% Blend regions of nucleus if too bright and causing contour fitting 
+% problems.
+if varargin{end} == 1
+    img = blendRegions(img);
+end
 
 % correct for z out of range
 zmin=floor(min(zs(:)));
@@ -143,9 +151,16 @@ I=sum(img1(linearindex).*weights,3)';
 
 %% minimizing energy
 % construct cost
-th2=CellVision3D.Image.getPercentageValue(I,.99);
-th1=CellVision3D.Image.getPercentageValue(I,.7);
-cost=sqrt((th2-th1)/2)*(10/mean(r))^2;
+
+% Upper pixel intensity threshold
+[th2] = CellVision3D.Image.getPercentageValue(I,.99);
+
+% Find lower pixel intensity threshold.
+[th1] = CellVision3D.Image.getPercentageValue(I,.7);
+
+% Calculate cost.
+% cost=sqrt((th2-th1)/2)*(10/mean(r))^2; % JW
+cost=sqrt((th2-th1)/2)*(varargin{end-2}/mean(r))^2;
 
 % override default cost
 if isnan(obj.cost)
@@ -162,7 +177,8 @@ energy=@(ind)CellVision3D.Fitting.ContourEnergy3DSphere(ind,I,cost,rs0,edges,nei
 % construct bound
 lb_c=zeros(size(initialpos,1),1)+1.001;
 ub_c=zeros(size(initialpos,1),1)+length(rs)-0.001;
-ini = (r-rs(1))/(rs(2)-rs(1))+1;
+% ini = (r-rs(1))/(rs(2)-rs(1))+1; % JW
+ini = (r-rs(1))/(rs(2)-rs(1)) + varargin{end-1}; % JW
 % fitting
 options=optimoptions('fmincon','MaxFunEvals', 1e6,'TolX',1e-3,'GradObj','on','Display','off');
 [indr,fval,exitflag,output] = fmincon(energy,ini,[],[],[],[],lb_c,ub_c,[],options);
@@ -181,7 +197,8 @@ outputpos = [x,y,z];
 outputpos = outputpos *scale - (scale-1)/2;
 
 %% plot all together
-showplot=0;
+% showplot=0; % JW
+showplot = 1; % JW
 parent=[];
 for i=1:length(varargin)/2
     switch lower(varargin{2*i-1})
@@ -192,7 +209,11 @@ for i=1:length(varargin)/2
     end
 end
 if isempty(parent) && showplot
-    parent=figure('Unit','Normalized','Position',[0.05 0.05 2/3 2/3]);
+%     parent=figure('Unit','Normalized','Position',[0.05 0.05 2/3 2/3]); %
+%     JW
+    f = figure('Unit','Normalized','Position',[0 0 3/4 1],'WindowStyle',...
+        'normal'); % JW
+    parent = f; % JW
 end
 
 if showplot
@@ -312,6 +333,7 @@ if showplot
         end
     end
     drawnow;
+    pause % JW
 end
 
 

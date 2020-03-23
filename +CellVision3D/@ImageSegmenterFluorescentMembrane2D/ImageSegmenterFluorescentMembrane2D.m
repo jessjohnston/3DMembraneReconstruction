@@ -7,11 +7,12 @@ classdef ImageSegmenterFluorescentMembrane2D < CellVision3D.ImageSegmenter
         lobject=30 %length of the object
         lnoise=1  % scale of the noise
         ncycles=1 % number of cycles to search for global mininum for canny edge segmentation
+        mode = 'thresholding'; % JW
     end
     
-    properties (SetAccess = protected)
-        mode;
-    end
+%     properties (SetAccess = protected) %% JW
+%         mode;
+%     end
     
     properties (Constant)
         mode_options={'automatic', 'thresholding', 'cannyedge'}
